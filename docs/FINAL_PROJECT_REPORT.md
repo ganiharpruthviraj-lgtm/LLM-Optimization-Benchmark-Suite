@@ -1,12 +1,11 @@
-# Comprehensive Technical & Academic Project Report
+# Technical & Academic Project Report
 ## LLM Optimization Benchmark Suite: Empirical Evaluation of Model Compression, Attention Fusion, and Parameter-Efficient Adaptation
 
 **Project Title:** LLM Optimization & Performance Engineering Suite  
-**Author / Evaluator:** Antigravity AI Engineering  
-**Academic / Technical Focus:** Large Language Model (LLM) Systems, Model Compression, & High-Performance Inference  
-**Target Architectures:** GPT-2 (117M / 124M Parameters) & DistilGPT2 (82M Parameters)  
+**Author / Evaluator:** Pruthviraj Ganihat (B.Tech AI Engineering)  
+**Target Models:** GPT-2 (117M / 124M Parameters) & DistilGPT2 (82M Parameters)  
 **Evaluation Dataset:** WikiText-2 Test Split (50,000 Characters)  
-**Environment:** Python 3.12 | PyTorch 2.11.0 (CPU Compatible) | Hugging Face Transformers & PEFT  
+**Runtime Environment:** Python 3.12 | PyTorch 2.11.0 | Hugging Face Transformers & PEFT  
 
 ---
 
@@ -14,7 +13,7 @@
 
 As Large Language Models (LLMs) scale, their deployment is severely constrained by high memory footprints, memory-bandwidth saturation, and quadratic computational complexity in self-attention. This project presents a systematic empirical evaluation of six foundational LLM optimization paradigms: **INT8 Dynamic Quantization**, **INT4 Weight-Only Quantization**, **Parameter-Efficient Fine-Tuning (LoRA)**, **Key-Value (KV) Caching**, **Fused Scaled Dot-Product Attention (SDPA)**, **Knowledge Distillation**, and **Speculative Decoding**. 
 
-Through architectural refactoring—specifically transforming non-standard Hugging Face `Conv1D` operators to `nn.Linear` layers—we resolved a catastrophic INT4 perplexity degradation anomaly (**PPL restored from 1609.24 to 43.23**), achieving a **28% physical memory reduction**. Furthermore, LoRA fine-tuning reduced updated parameters by **99.76%** while accelerating training by **1.14x**, and fused SDPA attention kernels yielded a **1.86x raw kernel speedup**. This report synthesizes quantitative trade-offs across precision, latency, and memory footprint.
+Through architectural refactoring—specifically transforming non-standard Hugging Face `Conv1D` operators to `nn.Linear` layers—we resolved a catastrophic INT4 perplexity degradation anomaly (**PPL restored from 1609.24 to 43.23**), achieving a **28% physical memory reduction**. Furthermore, LoRA fine-tuning reduced updated parameters by **99.76%** while accelerating training steps by **1.14x**, and fused SDPA attention kernels yielded a **1.86x raw kernel speedup**. This report synthesizes quantitative trade-offs across precision, latency, and memory footprint.
 
 ---
 
@@ -47,15 +46,6 @@ graph TD
 
     D --> D1["LoRA PEFT (99.76% Param Reduction, 1.14x Speedup)"]
 ```
-
-### Mathematical Definitions
-
-1. **Causal Next-Token Perplexity (PPL)**:
-   $$\text{PPL} = \exp\left( \frac{1}{N} \sum_{i=1}^{N} \mathcal{L}_i \right) = \exp\left( -\frac{1}{N} \sum_{i=1}^{N} \log P(x_i \mid x_{<i}) \right)$$
-2. **Scaled Dot-Product Attention (SDPA)**:
-   $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{Q K^T}{\sqrt{d_k}}\right) V$$
-3. **Low-Rank Adaptation (LoRA)**:
-   $$W' = W_0 + \Delta W = W_0 + \frac{\alpha}{r} (A \cdot B), \quad A \in \mathbb{R}^{d \times r}, B \in \mathbb{R}^{r \times k}, \quad r \ll \min(d, k)$$
 
 ---
 
@@ -92,7 +82,7 @@ During initial INT4 weight-only quantization using `quanto`, the model produced 
 ### 4.2 Root Cause Identification
 Hugging Face's implementation of GPT-2 utilizes custom 1D convolutional modules (`transformers.pytorch_utils.Conv1D`) instead of standard `torch.nn.Linear` layers for key, query, value projections (`c_attn`) and feed-forward projections (`c_fc`, `c_proj`).
 
-The `quanto` quantization engine failed to recursively target `Conv1D` modules, leaving all 48 backbone projection layers in unquantized FP32 while quantizing **only** the 50,257-class output vocabulary layer (`lm_head`). On CPU without compiled C++ packing kernels (`quanto_cpp.dll`), uncalibrated vocabulary logits were unpacked via element-wise Python loops, destroying language generation coherence.
+The `quanto` quantization engine failed to recursively target `Conv1D` modules, leaving all 48 backbone projection layers in unquantized FP32 while quantizing **only** the 50,257-class output vocabulary layer (`lm_head`). Without MSVC C++ DLL compilation (`quanto_cpp.dll`), uncalibrated vocabulary logits were unpacked via element-wise Python loops, destroying language generation coherence.
 
 ### 4.3 Engineering Fix & Implementation
 We authored a dynamic module converter (`fix_quantization.py`) that performs weight transposition and transposes `Conv1D` weight matrices into `nn.Linear` layers:
@@ -113,7 +103,7 @@ def conv1d_to_linear(module):
             conv1d_to_linear(child)
 ```
 
-The transformation achieved exact numerical equivalence ($\text{error} = 0.0000$). Following operator conversion, the `lm_head` was frozen in FP32 precision while the 48 backbone layers were quantized to `qint4`.
+The transformation achieved exact numerical equivalence ($\text{error} = 0.0000$). Following operator conversion, the `lm_head` was preserved in high-precision FP32 while the 48 backbone layers were quantized to `qint4`.
 
 ### 4.4 Quantitative Verification
 * **Perplexity Recovery:** Improved from **1609.24 to 43.23** (within 4.7 PPL points of uncompressed FP32).
@@ -135,7 +125,7 @@ Fine-tuning full model parameters requires storing optimizer states ($2 \times 4
 * **Fused SDPA Kernel:** Replacing manual $QK^T$ matrix materialization with PyTorch's native `F.scaled_dot_product_attention` fused kernel reduced attention execution time from **0.001802s to 0.000967s (1.86x kernel speedup)** by leveraging online softmax and memory tiling.
 
 ### 5.3 Model Compression: Distillation vs. Speculative Decoding
-* **Distillation:** Compressing `gpt2` (12 layers, 117M) into `distilgpt2` (6 layers, 82M) reduced model memory by **34.2% (312.47 MB)** and improved latency by **1.10x**, with a expected perplexity shift to 57.54.
+* **Distillation:** Compressing `gpt2` (12 layers, 117M) into `distilgpt2` (6 layers, 82M) reduced model memory by **34.2% (312.47 MB)** and improved latency by **1.10x**, with an expected perplexity shift to 57.54.
 * **Speculative Decoding:** Coupled `distilgpt2` (draft) with `gpt2` (target). Verified exact token output matching (`token_match = True`). On CPU, draft execution overhead exceeded target verification gains (0.37x), illustrating that speculative decoding requires high-latency target models (e.g. 70B+) or GPU environments to yield positive speedups.
 
 ---

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import sys, io, os, time, gc, csv, copy
+from pathlib import Path
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-os.environ.setdefault('HF_HOME', r'D:\hf_cache')
+SCRIPT_DIR = Path(__file__).resolve().parent
 
 import numpy as np
 import torch
 import torch.quantization as tq
-from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers.pytorch_utils import Conv1D
 from datasets import load_dataset
@@ -18,7 +19,6 @@ PROMPT = 'Artificial intelligence is transforming the world of'
 MAX_NEW_TOKENS = 20
 BENCH_RUNS = 2
 
-SCRIPT_DIR   = Path(r'D:\LLM optimization')
 OUT_CSV      = SCRIPT_DIR / 'results_cpu.csv'
 TEMPLATE_CSV = (SCRIPT_DIR / 'extracted_preview'
                 / 'LLM_Optimization_Benchmark_Suite' / 'results_template.csv')

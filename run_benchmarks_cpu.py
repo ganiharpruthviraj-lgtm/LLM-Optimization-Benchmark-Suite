@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys, io, os
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-# Pin HuggingFace cache to D: (71 GB free) -- avoids C: drive space issues
-os.environ.setdefault("HF_HOME", r"D:\hf_cache")
 
 """
 LLM Optimization Benchmark Suite -- CPU-compatible runner (CORRECTED)

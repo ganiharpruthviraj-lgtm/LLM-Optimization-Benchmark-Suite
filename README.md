@@ -5,7 +5,10 @@
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Transformers-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-An end-to-end, empirical benchmarking and systems engineering suite for **Large Language Model (LLM) performance optimization**. Implements, fixes, and quantitatively evaluates six core model compression and acceleration paradigms across **GPT-2 (117M/124M)** and **DistilGPT2 (82M)** on WikiText-2.
+An end-to-end empirical benchmarking and systems engineering suite for **Large Language Model (LLM) performance optimization**. Implements, fixes, and quantitatively evaluates six core model compression and acceleration paradigms across **GPT-2 (117M/124M)** and **DistilGPT2 (82M)** on WikiText-2.
+
+**Author:** Pruthviraj Ganihat (B.Tech AI Engineering)  
+**Detailed Technical Report:** [docs/FINAL_PROJECT_REPORT.md](docs/FINAL_PROJECT_REPORT.md)  
 
 ---
 
@@ -57,7 +60,7 @@ All metrics below are empirical measurements recorded on WikiText-2 (50k charact
 > [!IMPORTANT]  
 > **The Problem:** Initial INT4 weight quantization via `quanto` produced broken perplexity (**PPL = 1609.24**).  
 > **Root Cause:** Hugging Face GPT-2 utilizes custom `Conv1D` projection layers. The quantization engine bypassed these layers, quantizing **only** the 50,257-class output vocabulary layer (`lm_head`), leading to uncalibrated logit outputs.  
-> **The Fix:** Developed a dynamic module transformer ([`fix_quantization.py`](file:///d:/LLM%20optimization/fix_quantization.py)) that converts all 48 backbone `Conv1D` modules into `nn.Linear` layers ($W_{Linear} = W_{Conv1D}^T$, `error = 0.0`), preserves `lm_head` in FP32, and quantizes the backbone.  
+> **The Fix:** Developed a dynamic module transformer ([`fix_quantization.py`](fix_quantization.py)) that converts all 48 backbone `Conv1D` modules into `nn.Linear` layers ($W_{Linear} = W_{Conv1D}^T$, `error = 0.0`), preserves `lm_head` in FP32, and quantizes the backbone.  
 > **Result:** Perplexity recovered from **1609.24 to 43.23** (within 4.7 points of FP32 baseline) with a **28% physical RAM savings (341.6 MB)**.
 
 ---
@@ -67,8 +70,9 @@ All metrics below are empirical measurements recorded on WikiText-2 (50k charact
 ```text
 LLM-Optimization-Benchmark-Suite/
 ├── README.md                           # Master GitHub documentation
-├── BENCHMARK_REPORT.md                 # Detailed architectural analysis & engineering report
-├── KAGGLE_COMPETITION_FINAL_SUBMISSION.md # Competition package & Level 1 submission guide
+├── docs/                               # Detailed technical documentation
+│   ├── FINAL_PROJECT_REPORT.md         # Comprehensive academic & engineering project report
+│   └── BENCHMARK_REPORT.md             # Detailed benchmark analysis
 ├── results_cpu.csv                     # Raw empirical metric measurements
 ├── fix_quantization.py                 # Dynamic Conv1D -> nn.Linear transformer patch
 ├── run_benchmarks_cpu.py               # Automated CPU execution pipeline
@@ -87,7 +91,7 @@ LLM-Optimization-Benchmark-Suite/
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/LLM-Optimization-Benchmark-Suite.git
+git clone https://github.com/ganiharpruthviraj-lgtm/LLM-Optimization-Benchmark-Suite.git
 cd LLM-Optimization-Benchmark-Suite
 ```
 

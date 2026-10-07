@@ -1,0 +1,20 @@
+technique,variant,device,model,model_memory_mb,perplexity,latency_seconds,speedup,notes
+quantization,FP32,cpu,gpt2,474.7,38.53,0.7685,1.0,FP32 baseline on WikiText-2 test perplexity
+quantization,INT8,N/A,gpt2,N/A,N/A,N/A,N/A,SKIPPED: requires CUDA GPU + bitsandbytes
+quantization,INT4-NF4,N/A,gpt2,N/A,N/A,N/A,N/A,SKIPPED: requires CUDA GPU + bitsandbytes
+LoRA/PEFT,full-finetune,N/A,gpt2,N/A,N/A,N/A,N/A,SKIPPED: requires CUDA GPU + bitsandbytes
+LoRA/PEFT,LoRA,N/A,gpt2,N/A,N/A,N/A,N/A,SKIPPED: requires CUDA GPU + bitsandbytes
+kv_cache,with_cache,cpu,gpt2,474.7,N/A,0.7961,1.2481,KV cache enabled (default)
+kv_cache,without_cache,cpu,gpt2,474.7,N/A,0.9936,1.0,Recomputes K/V every step -- correct baseline
+flash_attention,FlashAttention-2,N/A,N/A,N/A,N/A,N/A,N/A,SKIPPED: requires CUDA + flash-attn package
+speculative_decoding,greedy_baseline,cpu,gpt2,474.7,N/A,0.7522,1.0,target=gpt2 (117M); pure greedy baseline
+speculative_decoding,speculative_greedy,cpu,distilgpt2+gpt2,787.17,N/A,2.053,0.3664,draft=distilgpt2 (82M) + target=gpt2 (117M); token_match=True; real speedup on GPU with larger target & longer seqs
+distillation,teacher,cpu,gpt2,474.7,38.53,0.7256,1.0,teacher baseline; WikiText-2 test PPL
+distillation,student_pretrained,cpu,distilgpt2,312.47,57.54,0.6583,1.1022,pre-trained distilled student; WikiText-2 test PPL
+distillation,student_post_distill,cpu,distilgpt2,312.47,107.22,N/A,N/A,after 10-step mini distillation; WikiText-2 test PPL
+LoRA/PEFT,full-finetune-baseline,cpu,gpt2,474.7,38.53,2.34,1.0,Full GPT-2 baseline before LoRA; WikiText-2 PPL; CPU
+LoRA/PEFT,LoRA-r8-cpu,cpu,gpt2+LoRA(r=8),475.83,38.43,2.0476,1.1428,"LoRA r=8 alpha=32; trainable=294,912/124,734,720 (0.24%); 10-step mini-train; CPU"
+flash_attention,standard-attn-cpu,cpu,gpt2,474.7,N/A,1.9501,1.0,Standard GPT-2 attention baseline; CPU
+flash_attention,SDPA-raw-kernel-cpu,cpu,tensor-B1-H12-S128-D64,N/A,N/A,0.000967,1.8629,F.scaled_dot_product_attention vs manual attn; CPU kernel; BetterTransformer unavailable
+quantization,INT8-dynamic-cpu,cpu,gpt2,621.94,38.53,0.8302,0.939,torch.quantize_dynamic INT8 targeting Conv1D (CPU alt to bitsandbytes INT8)
+quantization,INT4-quanto-cpu,cpu,gpt2,341.6,43.23,7.327,0.1064,Fixed INT4: Conv1D converted to Linear; backbone quantized to INT4 with lm_head in FP32; PPL restored from 1609.24 to 43.23; CPU unpack

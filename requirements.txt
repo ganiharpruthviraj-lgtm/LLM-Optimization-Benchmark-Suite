@@ -1,0 +1,10 @@
+torch>=2.0.0
+transformers>=4.38.0
+quanto>=0.2.0
+peft>=0.9.0
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pydantic>=2.6.0
+pandas>=2.0.0
+datasets>=2.16.0
+numpy>=1.24.0

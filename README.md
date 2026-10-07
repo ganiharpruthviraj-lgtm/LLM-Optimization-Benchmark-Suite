@@ -2,10 +2,11 @@
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![PyTorch 2.x](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
-[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Transformers-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-An end-to-end empirical benchmarking and systems engineering suite for **Large Language Model (LLM) performance optimization**. Implements, fixes, and quantitatively evaluates six core model compression and acceleration paradigms across **GPT-2 (117M/124M)** and **DistilGPT2 (82M)** on WikiText-2.
+An end-to-end empirical benchmarking and systems engineering suite for **Large Language Model (LLM) performance optimization** paired with an **enterprise FastAPI serving microservice**. Implements, fixes, and quantitatively evaluates six core model compression and acceleration paradigms across **GPT-2 (117M/124M)** and **DistilGPT2 (82M)** on WikiText-2.
 
 **Author:** Pruthviraj Ganihat (B.Tech AI Engineering)  
 **Detailed Technical Report:** [docs/FINAL_PROJECT_REPORT.md](docs/FINAL_PROJECT_REPORT.md)  
@@ -65,11 +66,45 @@ All metrics below are empirical measurements recorded on WikiText-2 (50k charact
 
 ---
 
+## 🐳 Enterprise Deployment: FastAPI REST Microservice & Docker
+
+### 1. Run FastAPI Local Microservice
+```bash
+pip install -r requirements.txt
+python serve_api.py
+```
+Open your browser at `http://localhost:8000/docs` to test interactive Swagger API documentation.
+
+### 2. Sample REST Generation Request (`curl`)
+```bash
+curl -X POST "http://localhost:8000/generate" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "prompt": "Artificial intelligence is transforming",
+           "max_new_tokens": 30,
+           "variant": "INT4"
+         }'
+```
+
+### 3. Containerized Deployment with Docker
+```bash
+# Build Docker image
+docker build -t llm-optimization-api .
+
+# Run containerized microservice on port 8000
+docker run -p 8000:8000 llm-optimization-api
+```
+
+---
+
 ## 📁 Repository Directory Structure
 
 ```text
 LLM-Optimization-Benchmark-Suite/
 ├── README.md                           # Master GitHub documentation
+├── serve_api.py                        # Production FastAPI model serving microservice
+├── Dockerfile                          # Production container configuration
+├── requirements.txt                    # Project dependencies
 ├── docs/                               # Detailed technical documentation
 │   ├── FINAL_PROJECT_REPORT.md         # Comprehensive academic & engineering project report
 │   └── BENCHMARK_REPORT.md             # Detailed benchmark analysis
@@ -103,7 +138,7 @@ venv\Scripts\activate
 # On Linux/macOS:
 source venv/bin/activate
 
-pip install torch transformers quanto peft pandas datasets
+pip install -r requirements.txt
 ```
 
 ### 3. Run Benchmark Suite
